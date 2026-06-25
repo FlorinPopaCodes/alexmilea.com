@@ -16,6 +16,7 @@ Squarespace subscription.
 | `site/_redirects` | Cloudflare Pages redirects (`/drawings` → `/`). |
 | `raw/` | Unprocessed rendered HTML from the original Squarespace site (kept for a future rebuild). |
 | `capture.py` | The scraper/localizer that produced `site/` from `urls.txt`. Idempotent. |
+| `optimize.py` | Post-processor: generates responsive WebP rungs (500/1000/1500w, q80) per image and rewires the srcset to real files. Idempotent. |
 | `urls.txt` | Inventory of all 83 source URLs (2 text pages, 3 galleries, 78 project pages). |
 
 ## Pages
@@ -34,6 +35,16 @@ uv run capture.py --sample   # one page of each type (fast check)
 Renders each page headless (Squarespace lazy-loads gallery images via JS), strips the
 Squarespace runtime, downloads every image at full resolution, and rewrites all
 references to root-relative paths.
+
+Then generate responsive image variants (run once on the built `site/`):
+
+```sh
+uv run optimize.py           # 500/1000/1500w WebP rungs + real srcset + LCP hints
+```
+
+The full-res 2500px originals are left untouched (pristine full-artwork view); only
+the smaller rungs are re-encoded (q80). The first image on each page is marked
+`eager`/`fetchpriority=high`, the rest stay lazy.
 
 ## Deploy
 
